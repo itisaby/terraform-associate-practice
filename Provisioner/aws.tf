@@ -2,17 +2,20 @@
 
 resource "aws_key_pair" "deployer" {
   key_name   = "deployer-key"
-  public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQDCytvGH/9FwYRnib3auR9+8t4DCvt6ZsDNtPl5bIPEDxBIIdX1whoJJgY8M2OIisTKIFGDM227JVSDD+VZ7mi8tp6mLVBsR/5qXkLKeJ3Q2t69MHqdBI5vyHuB4tlUc54ssTmWLf6j/MR5qMxpPAmigugwQt05LFRawq9QkIp0lX27rMNlBOgrJvneCqyCCX/cn+IT2UkeCW/B6Hq87j9OaAkDviPTlcq43DO546WDNOS2vZ+MkEmTWCIapMEXRVnGYoUpaEJPE5FXm+EJZvZonWe5vj1g/i1q8Pjyox09UTwjbS2sdE2VcHobPZLO0NeOAuzt5j5hTaeXZDhjg6pwrf5DBFtCe10zagRWOhhOJj5nXlIPyR2daL7v7A037kAQItRbExcsa3d6bvWESSRecdaoFGgtu5J9u5gW22Ij9i5q5kqjoRsU3DkqXjbfEMFwpVJLVGg2Lv7TaBjq7JFbY31XPZpRF5bQqWwGbGLWfPjbRjZiEi2ql/HssKA11Gk= arnab@arnab-HP-Pavilion-x360-Convertible-14-dh1xxx"
+  public_key = "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABgQChSsbugq2zCyah1PHYoGieu/ACBNtw5pWirCQXDet8OhxzxcaBx9T/8U0Egt801OqjSJtScFwd9FkUT30jKlOmHS5y2QCF0MU0kenSZHCJQ9+yjpXKoHmH8ocfcj1/JLpdjqtjoZkdzc8InkxiEo4QH3CeBs8JWU/eSfaEGsrzcm+45cIUwHimGe6Y/MBJcGJp2AJgtdhtEK3arswbQLm0mSlDqwPbqy7xAFuIYAr5WqRLFzNs3vIGlx1wVNzHeIKaJUaaq+1WMHa0G/HGtPRPNa0x/OLGhczcFdhpLRO5fcMaxmXAtt358BMyk4K8PugZ801+Nk//59qu8cozYzuIRYUDRrMGMSIefm9ksf99BmX+oPwWbetPCevP5vXzwMz6wzawXscbQyj9K1cj5pZ2uPOf1ChYF6V+1pJmskSZ23U8KBQPb7afNGkqB6KV5xDMoNeD0xJGkgf7TIAH9n4BWXeO3qyoK5MtaCVovJwOQaI1mX+cP+GV4XgeHVj3yI8= arnab@arnab-HP-Pavilion-x360-Convertible-14-dh1xxx"
 }
 
 data "template_file" "user_data" {
   template = file("./userdata.yml")
 }
+# data "template_file" "private_key" {
+#   template = file("/home/arnab/.ssh/terraform")
+# }
 
 resource "aws_instance" "app_server" {
   ami                    = "ami-090fa75af13c156b4"
   instance_type          = "t2.micro"
-  key_name               = aws_key_pair.deployer.key_name
+  key_name               = "${aws_key_pair.deployer.key_name}"
   vpc_security_group_ids = [aws_security_group.sg_server.id]
   user_data              = data.template_file.user_data.rendered
   # Local Exec
@@ -23,7 +26,7 @@ resource "aws_instance" "app_server" {
   # Doubt1
   # provisioner "remote-exec" {
   #   inline = [
-  #     "echo ${self.private_ip} >> home/ec2-user/private_ips.txt",
+  #     "echo ${self.private_ip} >> /home/ec2-user/private_ips.txt",
   #     # "puppet apply",
   #     # "consul join ${aws_instance.web.private_ip}",
   #   ]
@@ -31,7 +34,7 @@ resource "aws_instance" "app_server" {
   #     type     = "ssh"
   #     user     = "ec2-user"
   #     host     = "${self.public_ip}"
-  #     private_key = "${file("/home/arnab/.ssh/id_rsa")}"
+  #     private_key = data.template_file.private_key.rendered
   #   }
   # }
   # File Provisioner
